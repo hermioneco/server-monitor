@@ -43,12 +43,46 @@
         src: ../config.py
         dest: /opt/server-monitor/config.py
 
-    - name: Construire et lancer les conteneurs
+    - name: Créer le docker-compose de production
+      copy:
+        dest: /opt/server-monitor/docker-compose.yml
+        content: |
+          services:
+            db:
+              image: postgres:16-alpine
+              container_name: monitor_db
+              environment:
+                POSTGRES_USER: admin
+                POSTGRES_PASSWORD: secret123
+                POSTGRES_DB: servermonitor
+              volumes:
+                - pg_data:/var/lib/postgresql/data
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U admin -d servermonitor"]
+                interval: 5s
+                timeout: 5s
+                retries: 5
+
+            api:
+              image: hahahahahahaha853/server-monitor:latest
+              container_name: monitor_api
+              env_file: .env
+              ports:
+                - "5000:5000"
+              depends_on:
+                db:
+                  condition: service_healthy
+              restart: on-failure
+
+          volumes:
+            pg_data:
+
+    - name: Lancer les conteneurs depuis Docker Hub
       shell: |
         cd /opt/server-monitor
+        docker compose pull
         docker compose down
-        docker compose up -d --build
-      register: compose_output
+        docker compose up -d
 
     - name: Afficher le résultat du déploiement
       debug:
