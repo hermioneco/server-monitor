@@ -1,0 +1,69 @@
+---
+- name: Déploiement de l'application server-monitor
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Créer le dossier de l'application
+      file:
+        path: /opt/server-monitor
+        state: directory
+        mode: '0755'
+
+    - name: Copier docker-compose.yml sur le serveur
+      copy:
+        src: ../docker-compose.yml
+        dest: /opt/server-monitor/docker-compose.yml
+        mode: '0644'
+
+    - name: Copier le fichier .env sur le serveur
+      copy:
+        src: ../.env
+        dest: /opt/server-monitor/.env
+        mode: '0600'
+
+    - name: Copier le Dockerfile
+      copy:
+        src: ../Dockerfile
+        dest: /opt/server-monitor/Dockerfile
+
+    - name: Copier le code source (app/)
+      copy:
+        src: ../app/
+        dest: /opt/server-monitor/app/
+        mode: preserve
+
+    - name: Copier main.py
+      copy:
+        src: ../main.py
+        dest: /opt/server-monitor/main.py
+
+    - name: Copier config.py
+      copy:
+        src: ../config.py
+        dest: /opt/server-monitor/config.py
+
+    - name: Construire et lancer les conteneurs
+      shell: |
+        cd /opt/server-monitor
+        docker compose down
+        docker compose up -d --build
+      register: compose_output
+
+    - name: Afficher le résultat du déploiement
+      debug:
+        msg: "{{ compose_output.stdout_lines }}"
+
+    - name: Attendre que l'API soit prête
+      uri:
+        url: http://localhost:5000/health
+        method: GET
+        status_code: 200
+      register: health_check
+      retries: 10
+      delay: 5
+      until: health_check.status == 200
+    
+    - name: Confirmer que l'app est en ligne
+      debug:
+        msg: "✅ Application déployée et accessible sur http://159.89.27.10:5000"
