@@ -41,7 +41,7 @@ jobs:
 
       - name: Configurer la clé SSH
         run: |
-          mkdir -p ~/.ssh
+          mkdir -p /.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /.ssh/do_server_monitor
           chmod 600 /.ssh/do_server_monitor
           ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> /.ssh/known_hosts
