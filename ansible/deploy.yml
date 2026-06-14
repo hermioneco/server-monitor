@@ -16,12 +16,6 @@
         dest: /opt/server-monitor/docker-compose.yml
         mode: '0644'
 
-    - name: Copier le fichier .env sur le serveur
-      copy:
-        src: ../.env
-        dest: /opt/server-monitor/.env
-        mode: '0600'
-
     - name: Copier le Dockerfile
       copy:
         src: ../Dockerfile

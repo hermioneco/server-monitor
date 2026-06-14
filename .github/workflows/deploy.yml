@@ -56,6 +56,23 @@ jobs:
           ansible_python_interpreter=/usr/bin/python3
           EOF
 
+     - name: Créer le fichier .env
+        run: |
+          cat > /server-monitor/.env << EOF
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_HOST=db
+          POSTGRES_PORT=5432
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          EOF
+
+      - name: Copier le .env sur le serveur
+        run: |
+          scp -i ~/.ssh/do_server_monitor \
+            -o StrictHostKeyChecking=no \
+            /server-monitor/.env \
+            root@${{ secrets.DROPLET_IP }}:/opt/server-monitor/.env
       - name: Lancer le déploiement Ansible
         run: |
           cd ansible
