@@ -88,6 +88,6 @@
       delay: 5
       until: health_check.status == 200
 
-   - name: Confirmer que l'app est en ligne
+    - name: Confirmer que l'app est en ligne
       debug:
         msg: "✅ Application déployée sur http://{{ inventory_hostname }}/health"
