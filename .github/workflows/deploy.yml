@@ -1,3 +1,4 @@
+
 name: Build and Deploy
 
 on:
@@ -57,6 +58,13 @@ jobs:
           SECRET_KEY=${{ secrets.SECRET_KEY }}
           ENVEOF
 
+      - name: Créer le dossier app sur le serveur
+        run: |
+          ssh -i ~/.ssh/do_server_monitor \
+            -o StrictHostKeyChecking=no \
+            root@${{ secrets.DROPLET_IP }} \
+            "mkdir -p /opt/server-monitor"
+
       - name: Copier le .env sur le serveur
         run: |
           scp -i ~/.ssh/do_server_monitor \
@@ -82,4 +90,4 @@ jobs:
       - name: Vérifier le health check
         run: |
           sleep 15
-          curl -f http://${{ secrets.DROPLET_IP }}:5000/health
+          curl -f http://${{ secrets.DROPLET_IP }}/health

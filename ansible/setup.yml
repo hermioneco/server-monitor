@@ -23,6 +23,7 @@
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
+
     - name: Ajouter le dépôt Docker
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
@@ -51,3 +52,53 @@
     - name: Afficher la version Docker
       debug:
         msg: "{{ docker_version.stdout }}"
+
+    - name: Installer Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Supprimer la config Nginx par défaut
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Créer la config Nginx pour server-monitor
+      copy:
+        dest: /etc/nginx/sites-available/server-monitor
+        content: |
+          server {
+              listen 80;
+              server_name _;
+
+              location / {
+                  proxy_pass http://localhost:5000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_connect_timeout 30s;
+                  proxy_read_timeout 30s;
+              }
+
+              location /health {
+                  proxy_pass http://localhost:5000/health;
+                  access_log off;
+              }
+          }
+
+    - name: Activer le site Nginx
+      file:
+        src: /etc/nginx/sites-available/server-monitor
+        dest: /etc/nginx/sites-enabled/server-monitor
+        state: link
+
+    - name: Vérifier la config Nginx
+      command: nginx -t
+      register: nginx_test
+
+    - name: Démarrer et activer Nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+
