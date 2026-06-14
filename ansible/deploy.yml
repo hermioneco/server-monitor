@@ -78,10 +78,6 @@
         docker compose down
         docker compose up -d
 
-    - name: Afficher le résultat du déploiement
-      debug:
-        msg: "{{ compose_output.stdout_lines }}"
-
     - name: Attendre que l'API soit prête
       uri:
         url: http://localhost:5000/health
