@@ -9,12 +9,14 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.0</version>
+        <relativePath/>
     </parent>
 
-    <groupId>tg.epl</groupId>
+    <groupId>tg.univlome.epl</groupId>
     <artifactId>cyberwatch</artifactId>
     <version>1.0.0</version>
     <name>CyberWatch</name>
+    <description>SIEM simplifié — EPL Université de Lomé</description>
 
     <properties>
         <java.version>17</java.version>
@@ -36,6 +38,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.7.1</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
