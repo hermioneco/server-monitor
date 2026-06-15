@@ -31,7 +31,7 @@
                 retries: 5
 
             app:
-              image: ${{ secrets.DOCKERHUB_USERNAME }}/cyberwatch:latest
+              image: hahahahahahaha853/cyberwatch:latest
               container_name: cyberwatch_app
               environment:
                 POSTGRES_HOST: db
