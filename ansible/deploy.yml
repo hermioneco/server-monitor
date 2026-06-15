@@ -1,68 +1,46 @@
 ---
-- name: Déploiement de l'application server-monitor
+- name: Déploiement de CyberWatch
   hosts: webservers
   become: true
 
   tasks:
     - name: Créer le dossier de l'application
       file:
-        path: /opt/server-monitor
+        path: /opt/cyberwatch
         state: directory
         mode: '0755'
 
-    - name: Copier docker-compose.yml sur le serveur
-      copy:
-        src: ../docker-compose.yml
-        dest: /opt/server-monitor/docker-compose.yml
-        mode: '0644'
-
-    - name: Copier le Dockerfile
-      copy:
-        src: ../Dockerfile
-        dest: /opt/server-monitor/Dockerfile
-
-    - name: Copier le code source (app/)
-      copy:
-        src: ../app/
-        dest: /opt/server-monitor/app/
-        mode: preserve
-
-    - name: Copier main.py
-      copy:
-        src: ../main.py
-        dest: /opt/server-monitor/main.py
-
-    - name: Copier config.py
-      copy:
-        src: ../config.py
-        dest: /opt/server-monitor/config.py
-
     - name: Créer le docker-compose de production
       copy:
-        dest: /opt/server-monitor/docker-compose.yml
+        dest: /opt/cyberwatch/docker-compose.yml
         content: |
           services:
             db:
               image: postgres:16-alpine
-              container_name: monitor_db
+              container_name: cyberwatch_db
               environment:
                 POSTGRES_USER: admin
                 POSTGRES_PASSWORD: secret123
-                POSTGRES_DB: servermonitor
+                POSTGRES_DB: cyberwatch
               volumes:
                 - pg_data:/var/lib/postgresql/data
               healthcheck:
-                test: ["CMD-SHELL", "pg_isready -U admin -d servermonitor"]
+                test: ["CMD-SHELL", "pg_isready -U admin -d cyberwatch"]
                 interval: 5s
                 timeout: 5s
                 retries: 5
 
-            api:
-              image: hahahahahahaha853/server-monitor:latest
-              container_name: monitor_api
-              env_file: .env
+            app:
+              image: ${{ secrets.DOCKERHUB_USERNAME }}/cyberwatch:latest
+              container_name: cyberwatch_app
+              environment:
+                POSTGRES_HOST: db
+                POSTGRES_PORT: 5432
+                POSTGRES_DB: cyberwatch
+                POSTGRES_USER: admin
+                POSTGRES_PASSWORD: secret123
               ports:
-                - "5000:5000"
+                - "8080:8080"
               depends_on:
                 db:
                   condition: service_healthy
@@ -73,21 +51,21 @@
 
     - name: Lancer les conteneurs depuis Docker Hub
       shell: |
-        cd /opt/server-monitor
+        cd /opt/cyberwatch
         docker compose pull
         docker compose down
         docker compose up -d
 
-    - name: Attendre que l'API soit prête
+    - name: Attendre que l'app soit prête
       uri:
-        url: http://localhost:5000/health
+        url: http://localhost:8080/api/incidents/health
         method: GET
         status_code: 200
       register: health_check
-      retries: 10
-      delay: 5
+      retries: 15
+      delay: 10
       until: health_check.status == 200
 
     - name: Confirmer que l'app est en ligne
       debug:
-        msg: "✅ Application déployée sur http://{{ inventory_hostname }}/health"
+        msg: "✅ CyberWatch déployé sur http://{{ inventory_hostname }}"

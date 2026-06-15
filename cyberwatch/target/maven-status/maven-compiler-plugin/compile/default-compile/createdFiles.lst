@@ -1,0 +1,6 @@
+tg\univlome\epl\cyberwatch\controller\DashboardController.class
+tg\univlome\epl\cyberwatch\CyberwatchApplication.class
+tg\univlome\epl\cyberwatch\model\Incident.class
+tg\univlome\epl\cyberwatch\repository\IncidentRepository.class
+tg\univlome\epl\cyberwatch\controller\IncidentController.class
+tg\univlome\epl\cyberwatch\service\IncidentService.class

@@ -1,5 +1,4 @@
-
-name: Build and Deploy
+name: Build and Deploy CyberWatch
 
 on:
   push:
@@ -23,9 +22,9 @@ jobs:
       - name: Build et push de l'image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./cyberwatch
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/server-monitor:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cyberwatch:latest
 
   deploy:
     name: Deploy with Ansible
@@ -47,30 +46,12 @@ jobs:
           chmod 600 ~/.ssh/do_server_monitor
           ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
 
-      - name: Créer le fichier .env
-        run: |
-          cat > /tmp/server-monitor.env << ENVEOF
-          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-          POSTGRES_HOST=db
-          POSTGRES_PORT=5432
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          ENVEOF
-
       - name: Créer le dossier app sur le serveur
         run: |
           ssh -i ~/.ssh/do_server_monitor \
             -o StrictHostKeyChecking=no \
             root@${{ secrets.DROPLET_IP }} \
-            "mkdir -p /opt/server-monitor"
-
-      - name: Copier le .env sur le serveur
-        run: |
-          scp -i ~/.ssh/do_server_monitor \
-            -o StrictHostKeyChecking=no \
-            /tmp/server-monitor.env \
-            root@${{ secrets.DROPLET_IP }}:/opt/server-monitor/.env
+            "mkdir -p /opt/cyberwatch"
 
       - name: Créer l'inventaire Ansible dynamique
         run: |
@@ -89,5 +70,5 @@ jobs:
 
       - name: Vérifier le health check
         run: |
-          sleep 15
-          curl -f http://${{ secrets.DROPLET_IP }}/health
+          sleep 30
+          curl -f http://${{ secrets.DROPLET_IP }}/api/incidents/health

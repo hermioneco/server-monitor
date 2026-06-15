@@ -40,7 +40,7 @@ resource "digitalocean_firewall" "monitor_fw" {
   }
   inbound_rule {
     protocol         = "tcp"
-    port_range       = "5000"
+    port_range       = "8080"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
   outbound_rule {

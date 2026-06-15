@@ -1,0 +1,36 @@
+## YAML Template.
+---
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cyberwatch_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: cyberwatch
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d cyberwatch"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: cyberwatch_app
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: cyberwatch
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret123
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  pg_data:

@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberWatch — SIEM Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0e1a;
+            color: #e0e6f0;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: #0d1226;
+            border-bottom: 1px solid #1e2d4a;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+        header .shield { font-size: 24px; }
+        header .subtitle {
+            font-size: 12px;
+            color: #5a7a9a;
+            margin-left: auto;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            padding: 24px 32px 0;
+        }
+        .stat-card {
+            background: #0d1226;
+            border: 1px solid #1e2d4a;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-card .label {
+            font-size: 11px;
+            color: #5a7a9a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .stat-total .value { color: #4fc3f7; }
+        .stat-critical .value { color: #ff4757; }
+        .stat-high .value { color: #ff6b35; }
+        .stat-medium .value { color: #ffa502; }
+        .stat-low .value { color: #2ed573; }
+        .stat-open .value { color: #eccc68; }
+
+        /* FORM */
+        .form-section {
+            margin: 24px 32px 0;
+            background: #0d1226;
+            border: 1px solid #1e2d4a;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .form-section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4fc3f7;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 2fr 3fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            color: #5a7a9a;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: #0a0e1a;
+            border: 1px solid #1e2d4a;
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: #e0e6f0;
+            font-size: 13px;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #4fc3f7;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #4fc3f7; color: #0a0e1a; }
+        .btn-danger { background: #ff4757; color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+        /* TABLE */
+        .table-section {
+            margin: 20px 32px 32px;
+            background: #0d1226;
+            border: 1px solid #1e2d4a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table-header {
+            padding: 14px 20px;
+            border-bottom: 1px solid #1e2d4a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .table-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead th {
+            background: #0a0e1a;
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 11px;
+            color: #5a7a9a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+        tbody tr {
+            border-bottom: 1px solid #1e2d4a;
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: #111827; }
+        tbody tr:last-child { border-bottom: none; }
+        td { padding: 12px 16px; }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-CRITICAL { background: rgba(255,71,87,0.15); color: #ff4757; border: 1px solid rgba(255,71,87,0.3); }
+        .badge-HIGH     { background: rgba(255,107,53,0.15); color: #ff6b35; border: 1px solid rgba(255,107,53,0.3); }
+        .badge-MEDIUM   { background: rgba(255,165,2,0.15);  color: #ffa502; border: 1px solid rgba(255,165,2,0.3); }
+        .badge-LOW      { background: rgba(46,213,115,0.15); color: #2ed573; border: 1px solid rgba(46,213,115,0.3); }
+        .badge-OPEN        { background: rgba(236,204,104,0.15); color: #eccc68; border: 1px solid rgba(236,204,104,0.3); }
+        .badge-IN_PROGRESS { background: rgba(79,195,247,0.15);  color: #4fc3f7; border: 1px solid rgba(79,195,247,0.3); }
+        .badge-RESOLVED    { background: rgba(46,213,115,0.15);  color: #2ed573; border: 1px solid rgba(46,213,115,0.3); }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #5a7a9a;
+            font-size: 13px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-bar select {
+            background: #0a0e1a;
+            border: 1px solid #1e2d4a;
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: #e0e6f0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span class="shield">🛡️</span>
+    <h1>CyberWatch</h1>
+    <span class="subtitle">Security Incident Management System — EPL Université de Lomé</span>
+</header>
+
+<!-- STATS -->
+<div class="stats-grid">
+    <div class="stat-card stat-total">
+        <div class="value" th:text="${stats.total}">0</div>
+        <div class="label">Total</div>
+    </div>
+    <div class="stat-card stat-critical">
+        <div class="value" th:text="${stats.critical}">0</div>
+        <div class="label">Critical</div>
+    </div>
+    <div class="stat-card stat-high">
+        <div class="value" th:text="${stats.high}">0</div>
+        <div class="label">High</div>
+    </div>
+    <div class="stat-card stat-medium">
+        <div class="value" th:text="${stats.medium}">0</div>
+        <div class="label">Medium</div>
+    </div>
+    <div class="stat-card stat-low">
+        <div class="value" th:text="${stats.low}">0</div>
+        <div class="label">Low</div>
+    </div>
+    <div class="stat-card stat-open">
+        <div class="value" th:text="${stats.open_count}">0</div>
+        <div class="label">Open</div>
+    </div>
+</div>
+
+<!-- FORM AJOUT -->
+<div class="form-section">
+    <h2>➕ Signaler un incident</h2>
+    <form id="incidentForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Titre</label>
+                <input type="text" id="title" placeholder="Ex: Brute force SSH" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="description" placeholder="Détails de l'incident">
+            </div>
+            <div class="form-group">
+                <label>Sévérité</label>
+                <select id="severity">
+                    <option value="LOW">LOW</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HIGH" selected>HIGH</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Statut</label>
+                <select id="status">
+                    <option value="OPEN">OPEN</option>
+                    <option value="IN_PROGRESS">IN PROGRESS</option>
+                    <option value="RESOLVED">RESOLVED</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>IP Source</label>
+                <input type="text" id="sourceIp" placeholder="192.168.1.1">
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- TABLE -->
+<div class="table-section">
+    <div class="table-header">
+        <h2>📋 Incidents de sécurité</h2>
+        <div class="filter-bar">
+            <select id="filterSeverity" onchange="filterTable()">
+                <option value="">Toutes sévérités</option>
+                <option value="CRITICAL">CRITICAL</option>
+                <option value="HIGH">HIGH</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="LOW">LOW</option>
+            </select>
+            <select id="filterStatus" onchange="filterTable()">
+                <option value="">Tous statuts</option>
+                <option value="OPEN">OPEN</option>
+                <option value="IN_PROGRESS">IN PROGRESS</option>
+                <option value="RESOLVED">RESOLVED</option>
+            </select>
+        </div>
+    </div>
+
+    <table id="incidentTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Titre</th>
+                <th>Description</th>
+                <th>Sévérité</th>
+                <th>Statut</th>
+                <th>IP Source</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr th:if="${#lists.isEmpty(incidents)}">
+                <td colspan="8" class="empty-state">
+                    🔍 Aucun incident enregistré — le système est sûr !
+                </td>
+            </tr>
+            <tr th:each="inc : ${incidents}" th:data-severity="${inc.severity}" th:data-status="${inc.status}">
+                <td th:text="${inc.id}"></td>
+                <td th:text="${inc.title}"></td>
+                <td th:text="${inc.description}"></td>
+                <td><span class="badge" th:classappend="'badge-' + ${inc.severity}" th:text="${inc.severity}"></span></td>
+                <td><span class="badge" th:classappend="'badge-' + ${inc.status}" th:text="${inc.status}"></span></td>
+                <td th:text="${inc.sourceIp ?: '—'}"></td>
+                <td th:text="${#temporals.format(inc.createdAt, 'dd/MM HH:mm')}"></td>
+                <td>
+                    <button class="btn btn-danger btn-sm"
+                            th:onclick="'deleteIncident(' + ${inc.id} + ')'">
+                        Supprimer
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Ajouter un incident via l'API REST
+    document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const incident = {
+            title:       document.getElementById('title').value,
+            description: document.getElementById('description').value,
+            severity:    document.getElementById('severity').value,
+            status:      document.getElementById('status').value,
+            sourceIp:    document.getElementById('sourceIp').value
+        };
+        const res = await fetch('/api/incidents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(incident)
+        });
+        if (res.ok) window.location.reload();
+        else alert('Erreur lors de la création de l\'incident');
+    });
+
+    // Supprimer un incident
+    async function deleteIncident(id) {
+        if (!confirm('Supprimer cet incident ?')) return;
+        const res = await fetch('/api/incidents/' + id, { method: 'DELETE' });
+        if (res.ok) window.location.reload();
+        else alert('Erreur lors de la suppression');
+    }
+
+    // Filtrer le tableau côté client
+    function filterTable() {
+        const sev    = document.getElementById('filterSeverity').value;
+        const status = document.getElementById('filterStatus').value;
+        document.querySelectorAll('#tableBody tr[data-severity]').forEach(row => {
+            const matchSev    = !sev    || row.dataset.severity === sev;
+            const matchStatus = !status || row.dataset.status   === status;
+            row.style.display = matchSev && matchStatus ? '' : 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
