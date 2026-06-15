@@ -1,16 +1,11 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package tg.univlome.epl.cyberwatch;
 
-/**
- *
- * @author ashie
- */
-public class CyberwatchApplication {
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
+public class CyberwatchApplication {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        SpringApplication.run(CyberwatchApplication.class, args);
     }
 }
