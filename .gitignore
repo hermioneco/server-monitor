@@ -5,3 +5,13 @@ __pycache__/
 dist/
 .venv/
 terraform.tfvars
+target/
+*.class
+*.jar
+*.war
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
